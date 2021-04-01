@@ -1,0 +1,137 @@
+# DEPENDENCIES ------------------------------------------------------------
+install.packages("here")
+library(here)
+library(tidyverse)
+
+# IMPORT (don't forget to change direction from / to /------------------------------------------------------------------
+fileHRH <- list.files("foldername",pattern="filename",full.names = TRUE)
+df <- read_csv(fileHRH)
+
+
+#Make needed columns numeric up front-------------------
+
+df <- df %>% mutate(adjusted_fte = as.numeric(adjusted_fte))
+df <- df %>% mutate(total_comp = as.numeric(total_comp))
+
+#group by employment title
+df_salaries <- df %>% 
+  dplyr::group_by(employment_title) %>%
+  summarise(sumfte = sum(adjusted_fte),
+            sumexpenditure_amt = sum(total_comp)) %>%
+  ungroup()
+
+
+#Create a new column for expenditure per FTE-------------------------
+df_salaries <- df_salaries %>% 
+  mutate(expenditureperFTE = sumexpenditure_amt/sumfte)
+
+##Then create separate dataframe branches for each of the 8 cadre groups, 
+and the employment titles that are within that grouping. In the separate branches, 
+create a column for the weight of each employment title. (Total FTE for each employment 
+                                                          title / sum of total FTE for all the employment titles in the cadre group)
+
+#Create Clinical Medical branch------------------------------------------------
+df_salarymedical <- df_salaries %>% 
+  dplyr::filter(employment_title %in% c("Doctors","Medical Assistant"))
+
+
+#Create weights column
+df_salarymedical <- df_salarymedical %>% 
+  mutate(weight = sumfte/sum(df_salarymedical$sumfte))
+
+#Calculate total weighted average
+medical <- weighted.mean(df_salarymedical$expenditureperFTE, df_salarymedical$weight)
+
+#Create Clinical Nursing branch------------------------------------------------
+df_salarynursing <- df_salaries %>% 
+  dplyr::filter(employment_title %in% c("Auxiliary midwives","Auxiliary nurses", "Community Health Nurses", "Nurse practitioners", "Nurses", "Nurses midwives", "Nurses-Chief", "Nursing assistants"))
+
+#Create weights column
+df_salarynursing <- df_salarynursing %>% 
+  mutate(weight = sumfte/sum(df_salarynursing$sumfte))
+
+#Calculate total weighted average
+nursing <- weighted.mean(df_salarynursing$expenditureperFTE, df_salarynursing$weight)
+
+#Create Lay Counselor branch------------------------------------------------
+df_salarylaycounselor <- df_salaries %>% 
+  dplyr::filter(employment_title %in% c("Lay counselors","Lay Mentors", "Mother mentors", "Testing and counseling providers"))
+
+#Create weights column
+df_salarylaycounselor <- df_salarylaycounselor %>% 
+  mutate(weight = sumfte/sum(df_salarylaycounselor$sumfte))
+
+#Calculate total weighted average
+laycounselor <- weighted.mean(df_salarylaycounselor$expenditureperFTE, df_salarylaycounselor$weight)
+
+#Create Lay CHW branch------------------------------------------------
+df_salarylayCHW <- df_salaries %>% 
+  dplyr::filter(employment_title %in% c("Adherence support staff","Community health workers or ASCP", "Expert clients", "Other community-based cadres", "Peer educators", "Peer navigators", "Volunteer community workers"))
+
+#Create weights column
+df_salarylayCHW <- df_salarylayCHW %>% 
+  mutate(weight = sumfte/sum(df_salarylayCHW$sumfte))
+
+#Calculate total weighted average
+laychw <- weighted.mean(df_salarylayCHW$expenditureperFTE, df_salarylayCHW$weight)
+
+#Create Case Manager branch------------------------------------------------
+df_salarycasemanager <- df_salaries %>% 
+  dplyr::filter(employment_title %in% c("Social workers"))
+
+#Create weights column
+df_salarycasemanager <- df_salarycasemanager %>% 
+  mutate(weight = sumfte/sum(df_salarycasemanager$sumfte))
+
+#Calculate total weighted average
+casemanager <- weighted.mean(df_salarycasemanager$expenditureperFTE, df_salarycasemanager$weight)
+
+#Create Pharmacy branch------------------------------------------------
+df_salarypharmacy <- df_salaries %>% 
+  dplyr::filter(employment_title %in% c("Pharmacist", "Pharmacists", "Pharmacy assistants", "Pharmacy dispensators", "Pharmacy technicians"))
+
+#Create weights column
+df_salarypharmacy <- df_salarypharmacy %>% 
+  mutate(weight = sumfte/sum(df_salarypharmacy$sumfte))
+
+#Calculate total weighted average
+pharmacy <- weighted.mean(df_salarypharmacy$expenditureperFTE, df_salarypharmacy$weight)
+
+#Create Laboratory branch------------------------------------------------
+df_salarylaboratory <- df_salaries %>% 
+  dplyr::filter(employment_title %in% c("Lab accreditation specialists", "Laboratory managers", "Laboratory QI Specialists", "Laboratory technicians", "Phlebotomists"))
+
+#Create weights column
+df_salarylaboratory <- df_salarylaboratory %>% 
+  mutate(weight = sumfte/sum(df_salarylaboratory$sumfte))
+
+#Calculate total weighted average
+laboratory <- weighted.mean(df_salarylaboratory$expenditureperFTE, df_salarylaboratory$weight)
+
+#Create Data Clerk branch------------------------------------------------
+df_salarydataclerk <- df_salaries %>% 
+  dplyr::filter(employment_title %in% c("Data capturers", "Data clerks"))
+
+#Create weights column
+df_salarydataclerk <- df_salarydataclerk %>% 
+  mutate(weight = sumfte/sum(df_salarydataclerk$sumfte))
+
+#Calculate total weighted average
+dataclerk <- weighted.mean(df_salarydataclerk$expenditureperFTE, df_salarydataclerk$weight)
+
+#Make a dataframe for all the weighted averages ------------------------------
+df_weightedsalaries <- tibble(medical, nursing, 
+                              laycounselor, laychw,
+                              casemanager, pharmacy, 
+                              laboratory, dataclerk)
+
+#Pivot long with dataframe to make it fit the format--------------------------
+
+df_weightedsalaries <- df_weightedsalaries %>%
+  pivot_longer(
+    cols = `medical`: `dataclerk`,
+    names_to="Cadre Group",
+    values_to="Weighted Salary")
+
+#Write file 
+write_csv(df_weightedsalaries, 'Folder name / filename.csv', na = "")
