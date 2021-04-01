@@ -1,0 +1,357 @@
+# DEPENDENCIES ------------------------------------------------------------
+install.packages("here")
+library(here)
+library(tidyverse)
+
+# IMPORT ------------------------------------------------------------------
+fileHRH <- list.files("foldername", pattern = "filename",full.names = TRUE)
+df <- read_csv(fileHRH)
+
+
+#Make needed columns numeric up front-------------------
+
+
+df <- df %>% mutate(adjusted_fte = as.numeric(adjusted_fte))
+df <- df %>% mutate(total_comp = as.numeric(total_comp))
+
+
+#Separate out Clinical Medical----------------------------------------
+#filter
+
+
+df_medical <- df %>% dplyr::filter(employment_title %in% c("Doctors","Medical Assistant"))
+
+
+#first mutate a new column for clinical medical-----------
+
+df_medical <- df_medical %>% 
+  dplyr::mutate(ClinicalMedical = 'ClinicalMedical')
+
+#then filter and group by --------------------------
+
+df_medical <- df_medical %>% 
+  filter(adjusted_fte != 0) %>% 
+  group_by(PSNU, ClinicalMedical, solutionprogram_area) %>%
+  summarise(adjusted_fte = sum(adjusted_fte, na.rm = TRUE)) %>% 
+  ungroup()
+
+#spread in medical dataset
+df_medical <- df_medical %>% 
+  pivot_wider(names_from = c(ClinicalMedical, solutionprogram_area),
+              values_from = adjusted_fte)
+
+#replace NAs with zeroes-----------------
+df_medical <- df_medical %>%
+  mutate_at(vars(`ClinicalMedical_TX`:`ClinicalMedical_PrEP`),~replace_na(.,0))
+
+#Reorder columns-----------------
+df_medical <- df_medical %>% 
+  select(PSNU, ClinicalMedical_PrEP, ClinicalMedical_HTS, `ClinicalMedical_TX`)
+
+
+## Create Clinical-Nursing branch--------------------------------------------
+
+
+df_nursing <- df %>% dplyr::filter(employment_title %in% c("Auxiliary midwives","Auxiliary nurses", "Community Health Nurses", "Nurse practitioners", "Nurses", "Nurses midwives", "Nurses-Chief", "Nursing assistants"))
+
+
+
+#first mutate a new column for clinical nursing-----------
+
+df_nursing <- df_nursing %>% 
+  dplyr::mutate(ClinicalNursing = 'ClinicalNursing')
+
+#then filter and group by --------------------------
+
+df_nursing <- df_nursing %>% 
+  filter(adjusted_fte != 0) %>% 
+  group_by(PSNU, ClinicalNursing, solutionprogram_area) %>%
+  summarise(adjusted_fte = sum(adjusted_fte, na.rm = TRUE)) %>% 
+  ungroup()
+
+#spread in medical dataset
+df_nursing <- df_nursing %>% 
+  pivot_wider(names_from = c(ClinicalNursing, solutionprogram_area),
+              values_from = adjusted_fte)
+
+#Reorder columns-----------------
+df_nursing <- df_nursing %>% 
+  select(PSNU, ClinicalNursing_PrEP, ClinicalNursing_HTS, `ClinicalNursing_TX`)
+
+#replace NAs with zeroes-----------------
+df_nursing <- df_nursing %>%
+  mutate_at(vars(`ClinicalNursing_PrEP`:`ClinicalNursing_TX`),~replace_na(.,0))
+
+
+##Create Lay Counselor branch -----------------------------------------
+
+df_laycounselor <- df %>% dplyr::filter(employment_title %in% c("Lay counselors","Lay Mentors", "Mother mentors", "Testing and counseling providers"))
+
+
+#first mutate a new column -----------
+
+df_laycounselor <- df_laycounselor %>% 
+  dplyr::mutate(LayCounselor = 'LayCounselor')
+
+#then filter and group --------------------------
+
+df_laycounselor <- df_laycounselor %>% 
+  filter(adjusted_fte != 0) %>% 
+  group_by(PSNU, LayCounselor, solutionprogram_area) %>%
+  summarise(adjusted_fte = sum(adjusted_fte, na.rm = TRUE)) %>% 
+  ungroup()
+
+#spread in dataset
+df_laycounselor <- df_laycounselor %>% 
+  pivot_wider(names_from = c(LayCounselor, solutionprogram_area),
+              values_from = adjusted_fte)
+
+#Reorder columns-----------------
+df_laycounselor <- df_laycounselor %>% 
+  select(PSNU, LayCounselor_PrEP, LayCounselor_HTS, LayCounselor_TX)
+
+#replace NAs with zeroes-----------------
+df_laycounselor <- df_laycounselor %>%
+  mutate_at(vars(`LayCounselor_PrEP`:`LayCounselor_TX`),~replace_na(.,0))
+
+##Create LayCHW branch--------------------------------------------
+
+df_laychw <- df %>% dplyr::filter(employment_title %in% c("Adherence support staff","Community health workers or ASCP", "Expert clients", "Other community-based cadres", "Peer educators", "Peer navigators", "Volunteer community workers"))
+
+
+#first mutate a new column -----------
+
+df_laychw <- df_laychw %>% 
+  dplyr::mutate(LayCHW = 'LayCHW')
+
+#then filter and group --------------------------
+
+df_laychw <- df_laychw %>% 
+  filter(adjusted_fte != 0) %>% 
+  group_by(PSNU, LayCHW, solutionprogram_area) %>%
+  summarise(adjusted_fte = sum(adjusted_fte, na.rm = TRUE)) %>% 
+  ungroup()
+
+#spread in dataset
+df_laychw <- df_laychw %>% 
+  pivot_wider(names_from = c(LayCHW, solutionprogram_area),
+              values_from = adjusted_fte)
+
+#Reorder columns-----------------
+df_laychw <- df_laychw %>% 
+  select(PSNU, LayCHW_PrEP, LayCHW_HTS, LayCHW_TX)
+
+#replace NAs with zeroes-----------------
+df_laychw <- df_laychw %>%
+  mutate_at(vars(`LayCHW_PrEP`:`LayCHW_TX`),~replace_na(.,0))
+
+##Create Case Manager branch--------------------------------------------
+
+df_casemanager <- df %>% dplyr::filter(employment_title %in% c("Social workers"))
+
+
+#first mutate a new column -----------
+
+df_casemanager <- df_casemanager %>% 
+  dplyr::mutate(CaseManager = 'CaseManager')
+
+#then filter and group --------------------------
+
+df_casemanager <- df_casemanager %>% 
+  filter(adjusted_fte != 0) %>% 
+  group_by(PSNU, CaseManager, solutionprogram_area) %>%
+  summarise(adjusted_fte = sum(adjusted_fte, na.rm = TRUE)) %>% 
+  ungroup()
+
+#spread in dataset
+df_casemanager <- df_casemanager %>% 
+  pivot_wider(names_from = c(CaseManager, solutionprogram_area),
+              values_from = adjusted_fte)
+
+#Reorder columns-----------------
+df_casemanager <- df_casemanager %>% 
+  select(PSNU, CaseManager_PrEP, CaseManager_HTS, CaseManager_TX)
+
+#replace NAs with zeroes-----------------
+df_casemanager <- df_casemanager %>%
+  mutate_at(vars(`CaseManager_PrEP`:`CaseManager_TX`),~replace_na(.,0))
+
+##Create Pharmacy branch--------------------------------------------
+
+df_pharmacy <- df %>% dplyr::filter(employment_title %in% c("Pharmacist", "Pharmacists", "Pharmacy assistants", "Pharmacy dispensators", "Pharmacy technicians"))
+
+
+#first mutate a new column -----------
+
+df_pharmacy <- df_pharmacy %>% 
+  dplyr::mutate(Pharmacy = 'Pharmacy')
+
+#then filter and group --------------------------
+
+df_pharmacy <- df_pharmacy %>% 
+  filter(adjusted_fte != 0) %>% 
+  group_by(PSNU, Pharmacy, solutionprogram_area) %>%
+  summarise(adjusted_fte = sum(adjusted_fte, na.rm = TRUE)) %>% 
+  ungroup()
+
+#spread in dataset
+df_pharmacy <- df_pharmacy %>% 
+  pivot_wider(names_from = c(Pharmacy, solutionprogram_area),
+              values_from = adjusted_fte)
+
+#Reorder columns-----------------
+df_pharmacy <- df_pharmacy %>% 
+  select(PSNU, Pharmacy_PrEP, Pharmacy_HTS, Pharmacy_TX)
+
+#replace NAs with zeroes-----------------
+df_pharmacy <- df_pharmacy %>%
+  mutate_at(vars(`Pharmacy_PrEP`:`Pharmacy_TX`),~replace_na(.,0))
+
+##Create Laboratory branch--------------------------------------------
+
+
+df_laboratory <- df %>% dplyr::filter(employment_title %in% c("Lab accreditation specialists", "Laboratory managers", "Laboratory QI Specialists", "Laboratory technicians", "Phlebotomists"))
+
+
+#first mutate a new column -----------
+
+df_laboratory <- df_laboratory %>% 
+  dplyr::mutate(Laboratory = 'Laboratory')
+
+#then filter and group --------------------------
+
+df_laboratory <- df_laboratory %>% 
+  filter(adjusted_fte != 0) %>% 
+  group_by(PSNU, Laboratory, solutionprogram_area) %>%
+  summarise(adjusted_fte = sum(adjusted_fte, na.rm = TRUE)) %>% 
+  ungroup()
+
+#spread in dataset
+df_laboratory <- df_laboratory %>% 
+  pivot_wider(names_from = c(Laboratory, solutionprogram_area),
+              values_from = adjusted_fte)
+
+#Reorder columns-----------------
+df_laboratory <- df_laboratory %>% 
+  select(PSNU, Laboratory_PrEP, Laboratory_HTS, Laboratory_TX)
+
+#replace NAs with zeroes-----------------
+df_laboratory <- df_laboratory %>%
+  mutate_at(vars(`Laboratory_PrEP`:`Laboratory_TX`),~replace_na(.,0))
+
+##Create Data Clerk branch--------------------------------------------
+
+df_dataclerk <- df %>% dplyr::filter(employment_title %in% c("Data capturers", "Data clerks"))
+
+
+#first mutate a new column -----------
+
+df_dataclerk <- df_dataclerk %>% 
+  dplyr::mutate(Dataclerk = 'Dataclerk')
+
+#then filter and group --------------------------
+
+df_dataclerk <- df_dataclerk %>% 
+  filter(adjusted_fte != 0) %>% 
+  group_by(PSNU, Dataclerk, solutionprogram_area) %>%
+  summarise(adjusted_fte = sum(adjusted_fte, na.rm = TRUE)) %>% 
+  ungroup()
+
+#spread in dataset
+df_dataclerk <- df_dataclerk %>% 
+  pivot_wider(names_from = c(Dataclerk, solutionprogram_area),
+              values_from = adjusted_fte)
+
+#Reorder columns-----------------
+df_dataclerk <- df_dataclerk %>% 
+  select(PSNU, Dataclerk_PrEP, Dataclerk_HTS, Dataclerk_TX)
+
+#replace NAs with zeroes-----------------
+df_dataclerk <- df_dataclerk %>%
+  mutate_at(vars(`Dataclerk_PrEP`:`Dataclerk_TX`),~replace_na(.,0))
+
+
+##Merge dataframes using full join--------------------------
+df_merged <- df_medical %>% 
+  dplyr::full_join(df_nursing) %>% 
+  full_join(df_laychw) %>% 
+  full_join(df_laycounselor) %>% 
+  full_join(df_casemanager) %>% 
+  full_join(df_pharmacy) %>% 
+  full_join(df_laboratory) %>% 
+  full_join(df_dataclerk)
+
+#Add totals blank columns
+
+df_merged <- df_merged %>%
+  add_column(totalmedical = "") %>%
+  add_column(totalnursing = "") %>%
+  add_column(totallaycounselor = "") %>%
+  add_column(totallaychw = "") %>%
+  add_column(totalcasemanager = "") %>%
+  add_column(totalpharmacy = "") %>%
+  add_column(totallaboratory = "") %>%
+  add_column(totaldataclerk = "")
+
+#replace NAs with zeroes in merged dataset ------------------------
+df_merged <- df_merged %>%
+  mutate_at(vars(`ClinicalMedical_PrEP`:`totaldataclerk`),~replace_na(.,0))
+
+
+#Add missing columns----------------------------------
+full_col_list <- c("psnuuid",
+                   "PSNU", 
+                   "totalmedical",
+                   "ClinicalMedical_PrEP",
+                   "ClinicalMedical_HTS", 
+                   "ClinicalMedical_TX",
+                   "totalnursing", 
+                   "ClinicalNursing_PrEP",
+                   "ClinicalNursing_HTS",
+                   "ClinicalNursing_TX",
+                   "totallaycounselor",
+                   "LayCounselor_PrEP",
+                   "LayCounselor_HTS",
+                   "LayCounselor_TX",
+                   "totallaychw", 
+                   "LayCHW_PrEP", 
+                   "LayCHW_HTS", 
+                   "LayCHW_TX",
+                   "totalcasemanager",
+                   "CaseManager_PrEP",
+                   "CaseManager_HTS",
+                   "CaseManager_TX",
+                   "totalpharmacy",
+                   "Pharmacy_PrEP",
+                   "Pharmacy_HTS",
+                   "Pharmacy_TX",
+                   "totallaboratory",
+                   "Laboratory_PrEP",
+                   "Laboratory_HTS",
+                   "Laboratory_TX",
+                   "totaldataclerk",
+                   "DataClerk_PrEP",
+                   "DataClerk_HTS",
+                   "DataClerk_TX")
+
+#list of cols missing from the dataset
+missingscols <- setdiff(full_col_list, names(df_merged))
+
+#add missing cols from the dataset
+df_merged[,missingscols]=NA
+
+#arrange to match
+df_merged <- df_merged %>% 
+  select(all_of(full_col_list))
+
+
+#Edit dataset to show only 2 decimal places
+library(dplyr)
+df_merged <- df_merged %>% mutate(across(where(is.numeric, ~ round(., 2))))
+
+
+#export------------------------------------------------------
+write_csv(df_merged, 'foldername/filename.csv', na = "0")
+
+##paste into template as "values, skip blanks"
+
