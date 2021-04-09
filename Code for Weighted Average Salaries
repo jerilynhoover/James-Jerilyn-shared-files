@@ -32,7 +32,7 @@ create a column for the weight of each employment title. (Total FTE for each emp
 
 #Create Clinical Medical branch------------------------------------------------
 df_salarymedical <- df_salaries %>% 
-  dplyr::filter(employment_title %in% c("Doctors","Medical Assistant"))
+  dplyr::filter(employment_title %in% c("Doctors","Medical assistants"))
 
 
 #Create weights column
@@ -99,7 +99,7 @@ pharmacy <- weighted.mean(df_salarypharmacy$expenditureperFTE, df_salarypharmacy
 
 #Create Laboratory branch------------------------------------------------
 df_salarylaboratory <- df_salaries %>% 
-  dplyr::filter(employment_title %in% c("Lab accreditation specialists", "Laboratory managers", "Laboratory QI Specialists", "Laboratory technicians", "Phlebotomists"))
+  dplyr::filter(employment_title %in% c("Lab accreditation specialists", "Laboratory managers", "Laboratory QI specialists", "Laboratory technicians", "Phlebotomists"))
 
 #Create weights column
 df_salarylaboratory <- df_salarylaboratory %>% 
