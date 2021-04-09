@@ -19,7 +19,7 @@ df <- df %>% mutate(total_comp = as.numeric(total_comp))
 #filter
 
 
-df_medical <- df %>% dplyr::filter(employment_title %in% c("Doctors","Medical Assistant"))
+df_medical <- df %>% dplyr::filter(employment_title %in% c("Doctors","Medical assistants"))
 
 
 #first mutate a new column for clinical medical-----------
@@ -210,7 +210,7 @@ df_pharmacy <- df_pharmacy %>%
 ##Create Laboratory branch--------------------------------------------
 
 
-df_laboratory <- df %>% dplyr::filter(employment_title %in% c("Lab accreditation specialists", "Laboratory managers", "Laboratory QI Specialists", "Laboratory technicians", "Phlebotomists"))
+df_laboratory <- df %>% dplyr::filter(employment_title %in% c("Lab accreditation specialists", "Laboratory managers", "Laboratory QI specialists", "Laboratory technicians", "Phlebotomists"))
 
 
 #first mutate a new column -----------
@@ -347,7 +347,15 @@ df_merged <- df_merged %>%
 
 #Edit dataset to show only 2 decimal places
 library(dplyr)
-df_merged <- df_merged %>% mutate(across(where(is.numeric, ~ round(., 2))))
+df_merged <- df_merged %>% mutate_at(vars(ClinicalMedical_PrEP, ClinicalMedical_HTS, ClinicalMedical_TX, 
+                                          ClinicalNursing_PrEP, ClinicalNursing_HTS, ClinicalNursing_TX, 
+                                          LayCounselor_PrEP, LayCounselor_HTS, LayCounselor_TX, 
+                                          LayCHW_PrEP, LayCHW_HTS, LayCHW_TX, 
+                                          CaseManager_PrEP, CaseManager_HTS, CaseManager_TX, 
+                                          Pharmacy_PrEP, Pharmacy_HTS, Pharmacy_TX, 
+                                          Laboratory_PrEP, Laboratory_HTS, Laboratory_TX, 
+                                          Dataclerk_PrEP, Dataclerk_HTS, Dataclerk_TX), ~ round(., 2))
+
 
 
 #export------------------------------------------------------
